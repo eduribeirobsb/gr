@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Ações para o Risco</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body class="container mt-4">
+  <h2>Ações para o Risco</h2>
+  <h5><%= risco.risco %></h5>
+
+  <form method="POST" action="/riscos/acoes/salvar">
+    <input type="hidden" name="risco_id" value="<%= riscoId %>">
+    <div class="mb-3">
+      <label>Tipo (Preventiva ou Corretiva)</label>
+      <input type="text" name="tipo" class="form-control" required>
+    </div>
+    <div class="mb-3">
+      <label>Descrição</label>
+      <textarea name="descricao" class="form-control" required></textarea>
+    </div>
+    <div class="mb-3">
+      <label>Responsável</label>
+      <input type="text" name="responsavel" class="form-control" required>
+    </div>
+    <div class="mb-3">
+      <label>Situação</label>
+      <select name="situacao" class="form-control">
+        <option value="Não iniciada">Não iniciada</option>
+        <option value="Em andamento">Em andamento</option>
+        <option value="Concluída">Concluída</option>
+      </select>
+    </div>
+    <button class="btn btn-success">Salvar Ação</button>
+  </form>
+
+  <hr>
+  <h4>Ações Cadastradas</h4>
+  <table class="table table-bordered">
+    <thead>
+      <tr>
+        <th>Tipo</th>
+        <th>Descrição</th>
+        <th>Responsável</th>
+        <th>Situação</th>
+        <th>Data da Atualização</th>
+        <th>Alterado por</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% acoes.forEach(a => { %>
+        <tr>
+          <td><%= a.tipo %></td>
+          <td><%= a.descricao %></td>
+          <td><%= a.responsavel %></td>
+          <td><%= a.situacao %></td>
+          <td><%= a.data_atualizacao ? new Date(a.data_atualizacao).toLocaleString('pt-BR') : '-' %></td>
+          <td><%= a.alterado_por || '-' %></td>
+          <td>
+            <a href="/riscos/acoes/editar/<%= a.id %>" class="btn btn-sm btn-outline-primary">✏️ Editar</a>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</body>
+</html>

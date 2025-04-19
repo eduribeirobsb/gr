@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Gerenciar Riscos</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body class="container mt-4">
+  <h2>Riscos Cadastrados</h2>
+  <table class="table table-bordered">
+    <thead>
+      <tr>
+        <th>Risco</th>
+        <th>Causa</th>
+        <th>Consequência</th>
+        <th>NRI</th>
+        <th>Atualizado em</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% riscos.forEach(r => { %>
+        <tr>
+          <td><%= r.risco %></td>
+          <td><%= r.causa %></td>
+          <td><%= r.consequencia %></td>
+          <td><%= r.nri %></td>
+          <td><%= new Date(r.data_registro).toLocaleString('pt-BR') %></td>
+          <td>
+            <a href="/riscos/editar/<%= r.id %>" class="btn btn-sm btn-outline-primary">✏️ Editar Risco</a>
+            <a href="/riscos/acoes/<%= r.id %>" class="btn btn-sm btn-outline-secondary ms-1">✏️ Atualizar Ações</a>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+  <a href="/contratos" class="btn btn-secondary">⬅ Voltar</a>
+</body>
+</html>
