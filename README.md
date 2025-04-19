@@ -44,7 +44,7 @@ node app.js
 3. Acesse o servidor
 http://localhost:3000
 
-📂 Estrutura
+## 📂 Estrutura
 /models         ← lógica de acesso ao banco
 /routes         ← rotas da aplicação
 /views          ← páginas EJS (login, riscos, ações, relatório)
