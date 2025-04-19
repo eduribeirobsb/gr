@@ -1,59 +1,54 @@
+# 🛡️ Sistema de Gerenciamento de Riscos Contratuais
 
-# Sistema de Gerenciamento de Riscos Contratuais
+Este é um sistema web simples para cadastro, avaliação e acompanhamento de riscos relacionados a contratos públicos e administrativos.
 
-Este é um sistema simples e moderno para cadastro de Processos Administrativos (PA), contratos e riscos associados, com ações corretivas/preventivas obrigatórias quando o NRI (Nível de Risco) for alto.
+## 🚀 Funcionalidades
 
-## 🚀 Tecnologias Utilizadas
-- Node.js
-- Express
-- EJS (template engine)
-- SQLite (banco de dados interno)
-- PDFKit (geração de relatórios em PDF)
-- Bootstrap (interface moderna)
+- 📌 Cadastro de PAs, contratos e objetos
+- ⚠️ Registro de riscos com causa, consequência, impacto e probabilidade
+- ✅ Cálculo automático do NRI (Nível de Risco)
+- 🔐 Login com controle de usuário (adm e ser)
+- 📝 Registro de ações preventivas/corretivas para NRI ≥ 8
+- 🕵️ Histórico com data de atualização e responsável
+- 📄 Geração de relatório em PDF com layout do Bootstrap
 
-## 📦 Instalação
+## 👥 Usuários padrão
 
-1. Clone ou baixe este repositório.
-2. Acesse a pasta do projeto:
+| Usuário | Senha   | Perfil |
+|---------|---------|--------|
+| `adm`   | `123456`| Admin  |
+| `ser`   | `123456`| Servidor |
 
-```bash
-cd app_gerenciamento_riscos
-```
+## 💻 Tecnologias utilizadas
 
-3. Instale as dependências:
+- Node.js + Express
+- SQLite3
+- EJS (views)
+- Bootstrap 5
+- HTML-PDF (geração de PDF)
 
-```bash
+## 🧱 Estrutura de tabelas
+
+- `contratos`: número do PA, contrato, unidade, objeto
+- `riscos`: risco, causa, consequência, impacto, probabilidade, NRI
+- `acoes`: ações corretivas/preventivas, responsáveis, situação, datas
+
+## ▶️ Como executar
+
+1. Instale as dependências:
 npm install
-```
 
-4. Inicie o servidor:
+2. Inicie o servidor
+node app.js
 
-```bash
-npm start
-```
-
-5. Acesse a aplicação no navegador:
-
-```
+3. Acesse o servidor
 http://localhost:3000
-```
 
-## 🧠 Funcionalidades
-
-- Cadastro de PA, contrato, unidade e objeto
-- Registro de riscos com causa, consequência, probabilidade e impacto
-- Ações obrigatórias se NRI ≥ 8
-- Histórico de ações com status e responsáveis
-- Geração de relatórios em PDF
-
-## 📁 Estrutura do Projeto
-
-- `models/`: Modelos de dados (Contrato, Risco, Ação)
-- `routes/`: Rotas organizadas por funcionalidade
-- `views/`: Telas da aplicação (EJS)
-- `database.js`: Banco de dados SQLite interno
-- `app.js`: Entrada principal da aplicação
-
-## 📄 Licença
-
-Este projeto é de uso acadêmico e institucional.
+📂 Estrutura
+/models         ← lógica de acesso ao banco
+/routes         ← rotas da aplicação
+/views          ← páginas EJS (login, riscos, ações, relatório)
+middlewares/    ← autenticação de sessão
+app.js          ← aplicação principal
+database.js     ← conexão com SQLite
+banco.sqlite    ← banco de dados
