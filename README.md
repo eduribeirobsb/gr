@@ -44,25 +44,5 @@ node app.js
 3. Acesse o servidor
 http://localhost:3000
 
-## 📂 Estrutura
-├── app.js               # Arquivo principal da aplicação
-├── banco.sqlite         # Banco de dados SQLite
-├── database.js          # Conexão com o banco de dados
-├── .gitignore           # Arquivos ignorados no Git
-│
-├── /models              # Lógica de acesso ao banco de dados
-│   ├── Risco.js
-│   └── Acao.js
-│
-├── /routes              # Rotas da aplicação
-│   ├── auth.js          # Login e sessão
-│   └── riscos.js        # Cadastro, edição e relatórios de riscos
-│
-├── /middlewares         # Middleware de autenticação
-│   └── auth.js
-│
-├── /views               # Páginas EJS (interface do usuário)
-│   ├── login.ejs
-│   ├── riscos.ejs
-│   ├── acoes.ejs
-│   └── relatorio.ejs
+## 📂 Biblioteca Externa
+https://github.com/marcbachmann/node-html-pdf
