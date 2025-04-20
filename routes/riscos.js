@@ -17,7 +17,7 @@ router.get('/gerenciar/:id', (req, res) => {
   });
 });
 
-// Cadastrar risco (formulário)
+// Formulário para cadastrar risco
 router.get('/cadastrar/:contratoId', (req, res) => {
   const contratoId = req.params.contratoId;
   db.get('SELECT * FROM contratos WHERE id = ?', [contratoId], (err, contrato) => {
@@ -29,9 +29,9 @@ router.get('/cadastrar/:contratoId', (req, res) => {
 // Salvar risco
 router.post('/salvar', (req, res) => {
   const { contrato_id, risco, causa, consequencia, impacto, probabilidade, fase } = req.body;
-  const nri = impacto * probabilidade;
+  const nri = parseInt(impacto) * parseInt(probabilidade);
   const data = new Date().toISOString();
-  const usuario = req.session.usuario || 'desconhecido';
+  const usuario = req.session?.usuario || 'desconhecido';
 
   const sql = `
     INSERT INTO riscos (contrato_id, risco, causa, consequencia, impacto, probabilidade, nri, data_registro, fase, alterado_por)
@@ -39,11 +39,15 @@ router.post('/salvar', (req, res) => {
   `;
 
   db.run(sql, [contrato_id, risco, causa, consequencia, impacto, probabilidade, nri, data, fase, usuario], function (err) {
-    if (err) return res.send('Erro ao salvar risco');
+    if (err) {
+      console.error('Erro ao salvar risco:', err.message);
+      return res.status(500).send('Erro ao salvar risco');
+    }
+
     if (nri >= 8) {
-      res.redirect('/riscos/acoes/' + this.lastID);
+      return res.redirect('/riscos/acoes/' + this.lastID);
     } else {
-      res.redirect('/riscos/gerenciar/' + contrato_id);
+      return res.redirect('/riscos/gerenciar/' + contrato_id);
     }
   });
 });
@@ -61,9 +65,9 @@ router.get('/editar/:id', (req, res) => {
 router.post('/atualizar/:id', (req, res) => {
   const id = req.params.id;
   const { risco, causa, consequencia, impacto, probabilidade, contrato_id, fase } = req.body;
-  const nri = impacto * probabilidade;
+  const nri = parseInt(impacto) * parseInt(probabilidade);
   const data = new Date().toISOString();
-  const usuario = req.session.usuario || 'desconhecido';
+  const usuario = req.session?.usuario || 'desconhecido';
 
   const sql = `
     UPDATE riscos
@@ -72,12 +76,15 @@ router.post('/atualizar/:id', (req, res) => {
   `;
 
   db.run(sql, [risco, causa, consequencia, impacto, probabilidade, nri, data, fase, usuario, id], function (err) {
-    if (err) return res.send('Erro ao atualizar risco');
+    if (err) {
+      console.error('Erro ao atualizar risco:', err.message);
+      return res.status(500).send('Erro ao atualizar risco');
+    }
     res.redirect('/riscos/gerenciar/' + contrato_id);
   });
 });
 
-// Formulário para ações
+// Formulário para cadastrar ações
 router.get('/acoes/:riscoId', (req, res) => {
   const riscoId = req.params.riscoId;
   db.get('SELECT * FROM riscos WHERE id = ?', [riscoId], (err, risco) => {
@@ -111,13 +118,14 @@ router.get('/acoes/ver/:riscoId', (req, res) => {
 router.post('/acoes/salvar', (req, res) => {
   const { risco_id, tipo, descricao, responsavel, situacao } = req.body;
   const data = new Date().toISOString().split('T')[0];
+  const usuario = req.session?.usuario || 'desconhecido';
 
   const sql = `
-    INSERT INTO acoes (risco_id, tipo, descricao, responsavel, situacao, data_atualizacao)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO acoes (risco_id, tipo, descricao, responsavel, situacao, data_atualizacao, alterado_por)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
   `;
 
-  db.run(sql, [risco_id, tipo, descricao, responsavel, situacao, data], function (err) {
+  db.run(sql, [risco_id, tipo, descricao, responsavel, situacao, data, usuario], function (err) {
     if (err) return res.send('Erro ao salvar ação');
     res.redirect('/riscos/acoes/' + risco_id);
   });
