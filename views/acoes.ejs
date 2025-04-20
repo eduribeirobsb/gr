@@ -2,67 +2,85 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
-  <title>Ações para o Risco</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <title>Ações do Risco</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="container mt-4">
-  <h2>Ações para o Risco</h2>
-  <h5><%= risco.risco %></h5>
+  <h2>Ações Necessárias</h2>
+  <p><strong>Contrato:</strong> <%= contrato.numero_contrato %> — <%= contrato.objeto %></p>
+  <p><strong>Risco:</strong> <%= risco.risco %></p>
+  <p><strong>NRI:</strong> <%= risco.nri %> (≥ 8 exige ações obrigatórias)</p>
+
+  <% if (risco.nri >= 8 && acoes.length === 0) { %>
+    <div class="alert alert-warning">
+      ⚠️ Este risco exige ao menos uma ação preventiva ou corretiva. Cadastre abaixo para prosseguir.
+    </div>
+  <% } %>
 
   <form method="POST" action="/riscos/acoes/salvar">
-    <input type="hidden" name="risco_id" value="<%= riscoId %>">
-    <div class="mb-3">
-      <label>Tipo (Preventiva ou Corretiva)</label>
-      <input type="text" name="tipo" class="form-control" required>
+    <input type="hidden" name="risco_id" value="<%= risco.id %>">
+
+    <div class="row mb-3">
+      <div class="col-md-6">
+        <label>Tipo de Ação</label>
+        <select name="tipo" class="form-control" required>
+          <option value="preventiva">Preventiva</option>
+          <option value="corretiva">Corretiva</option>
+        </select>
+      </div>
+      <div class="col-md-6">
+        <label>Responsável</label>
+        <input type="text" name="responsavel" class="form-control" required>
+      </div>
     </div>
+
     <div class="mb-3">
-      <label>Descrição</label>
-      <textarea name="descricao" class="form-control" required></textarea>
+      <label>Descrição da Ação</label>
+      <textarea name="descricao" class="form-control" rows="2" required></textarea>
     </div>
-    <div class="mb-3">
-      <label>Responsável</label>
-      <input type="text" name="responsavel" class="form-control" required>
-    </div>
+
     <div class="mb-3">
       <label>Situação</label>
-      <select name="situacao" class="form-control">
-        <option value="Não iniciada">Não iniciada</option>
-        <option value="Em andamento">Em andamento</option>
-        <option value="Concluída">Concluída</option>
+      <select name="situacao" class="form-control" required>
+        <option value="não iniciada">Não iniciada</option>
+        <option value="em andamento">Em andamento</option>
+        <option value="concluída">Concluída</option>
       </select>
     </div>
-    <button class="btn btn-success">Salvar Ação</button>
+
+    <button class="btn btn-primary">Salvar Ação</button>
   </form>
 
-  <hr>
-  <h4>Ações Cadastradas</h4>
-  <table class="table table-bordered">
-    <thead>
-      <tr>
-        <th>Tipo</th>
-        <th>Descrição</th>
-        <th>Responsável</th>
-        <th>Situação</th>
-        <th>Data da Atualização</th>
-        <th>Alterado por</th>
-        <th>Ações</th>
-      </tr>
-    </thead>
-    <tbody>
-      <% acoes.forEach(a => { %>
+  <% if (acoes.length > 0) { %>
+    <h4 class="mt-4">Ações Cadastradas</h4>
+    <table class="table table-bordered mt-2">
+      <thead class="table-light">
         <tr>
-          <td><%= a.tipo %></td>
-          <td><%= a.descricao %></td>
-          <td><%= a.responsavel %></td>
-          <td><%= a.situacao %></td>
-          <td><%= a.data_atualizacao ? new Date(a.data_atualizacao).toLocaleString('pt-BR') : '-' %></td>
-          <td><%= a.alterado_por || '-' %></td>
-          <td>
-            <a href="/riscos/acoes/editar/<%= a.id %>" class="btn btn-sm btn-outline-primary">✏️ Editar</a>
-          </td>
+          <th>Tipo</th>
+          <th>Descrição</th>
+          <th>Responsável</th>
+          <th>Situação</th>
+          <th>Atualizado em</th>
         </tr>
-      <% }) %>
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        <% acoes.forEach(a => { %>
+          <tr>
+            <td><%= a.tipo %></td>
+            <td><%= a.descricao %></td>
+            <td><%= a.responsavel %></td>
+            <td><%= a.situacao %></td>
+            <td><%= a.data_atualizacao %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+
+    <div class="mt-3">
+      <a href="/riscos/gerenciar/<%= contrato.id %>" class="btn btn-outline-secondary">
+        ← Voltar para Riscos do Contrato
+      </a>
+    </div>
+  <% } %>
 </body>
 </html>

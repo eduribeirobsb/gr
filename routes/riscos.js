@@ -1,155 +1,161 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../database');
-const Risco = require('../models/Risco');
-const Acao = require('../models/Acao');
 const pdf = require('html-pdf');
-const requireLogin = require('../middlewares/auth');
-
-// Cadastro de risco
-router.get('/cadastrar/:id', requireLogin, (req, res) => {
-  const contratoId = req.params.id;
-  db.get(`SELECT * FROM contratos WHERE id = ?`, [contratoId], (err, contrato) => {
-    if (err || !contrato) return res.send('Contrato não encontrado.');
-    Risco.listarPorContrato(contratoId, (err, riscos) => {
-      if (err) return res.send('Erro ao buscar riscos.');
-      res.render('riscos', { contratoId, contrato, riscos });
-    });
-  });
-});
-
-router.post('/salvar', requireLogin, (req, res) => {
-  req.body.alterado_por = req.session.usuario;
-  Risco.salvar(req.body, (err, riscoId, nri) => {
-    if (nri >= 8) {
-      res.redirect(`/riscos/acoes/${riscoId}`);
-    } else {
-      res.redirect(`/riscos/cadastrar/${req.body.contrato_id}`);
-    }
-  });
-});
-
-// Ações
-router.get('/acoes/:riscoId', requireLogin, (req, res) => {
-  const riscoId = req.params.riscoId;
-  db.get(`SELECT * FROM riscos WHERE id = ?`, [riscoId], (err, risco) => {
-    if (err || !risco) return res.send('Risco não encontrado.');
-    Acao.listarPorRisco(riscoId, (err, acoes) => {
-      res.render('acoes', { riscoId, risco, acoes });
-    });
-  });
-});
-
-router.post('/acoes/salvar', requireLogin, (req, res) => {
-  req.body.alterado_por = req.session.usuario;
-  Acao.salvar(req.body, () => {
-    res.redirect(`/riscos/acoes/${req.body.risco_id}`);
-  });
-});
-
-// Edição de ação
-router.get('/acoes/editar/:id', requireLogin, (req, res) => {
-  const acaoId = req.params.id;
-  db.get(`SELECT * FROM acoes WHERE id = ?`, [acaoId], (err, acao) => {
-    if (err || !acao) return res.send('Ação não encontrada.');
-    res.render('editar_acao', { acao });
-  });
-});
-
-router.post('/acoes/editar/:id', requireLogin, (req, res) => {
-  const { tipo, descricao, responsavel, situacao, risco_id } = req.body;
-  const data_atualizacao = new Date().toISOString();
-  db.run(
-    `UPDATE acoes SET tipo = ?, descricao = ?, responsavel = ?, situacao = ?, data_atualizacao = ?, alterado_por = ? WHERE id = ?`,
-    [tipo, descricao, responsavel, situacao, data_atualizacao, req.session.usuario, req.params.id],
-    function (err) {
-      if (err) return res.send('Erro ao atualizar ação.');
-      res.redirect(`/riscos/acoes/${risco_id}`);
-    }
-  );
-});
+const ejs = require('ejs');
+const path = require('path');
 
 // Gerenciar riscos
-router.get('/gerenciar/:contratoId', requireLogin, (req, res) => {
+router.get('/gerenciar/:id', (req, res) => {
+  const contratoId = req.params.id;
+  db.get('SELECT * FROM contratos WHERE id = ?', [contratoId], (err, contrato) => {
+    if (err || !contrato) return res.send('Contrato não encontrado');
+    db.all('SELECT * FROM riscos WHERE contrato_id = ?', [contratoId], (err, riscos) => {
+      if (err) return res.send('Erro ao buscar riscos');
+      res.render('riscos', { contrato, riscos, contratoId });
+    });
+  });
+});
+
+// Cadastrar risco (formulário)
+router.get('/cadastrar/:contratoId', (req, res) => {
   const contratoId = req.params.contratoId;
-  const atualizar = req.query.atualizar === 'true';
-  Risco.listarPorContrato(contratoId, (err, riscos) => {
-    if (err) return res.send('Erro ao carregar riscos.');
-    if (atualizar && riscos.length > 0) {
-      const now = new Date().toISOString();
-      riscos.forEach(risco => {
-        db.run(`UPDATE riscos SET data_registro = ? WHERE id = ?`, [now, risco.id]);
-      });
+  db.get('SELECT * FROM contratos WHERE id = ?', [contratoId], (err, contrato) => {
+    if (err || !contrato) return res.send('Contrato não encontrado');
+    res.render('cadastrar_risco', { contratoId, contrato });
+  });
+});
+
+// Salvar risco
+router.post('/salvar', (req, res) => {
+  const { contrato_id, risco, causa, consequencia, impacto, probabilidade, fase } = req.body;
+  const nri = impacto * probabilidade;
+  const data = new Date().toISOString();
+  const usuario = req.session.usuario || 'desconhecido';
+
+  const sql = `
+    INSERT INTO riscos (contrato_id, risco, causa, consequencia, impacto, probabilidade, nri, data_registro, fase, alterado_por)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `;
+
+  db.run(sql, [contrato_id, risco, causa, consequencia, impacto, probabilidade, nri, data, fase, usuario], function (err) {
+    if (err) return res.send('Erro ao salvar risco');
+    if (nri >= 8) {
+      res.redirect('/riscos/acoes/' + this.lastID);
+    } else {
+      res.redirect('/riscos/gerenciar/' + contrato_id);
     }
-    res.render('gerenciar', { riscos, contratoId });
   });
 });
 
 // Editar risco
-router.get('/editar/:id', requireLogin, (req, res) => {
-  const riscoId = req.params.id;
-  db.get(`SELECT * FROM riscos WHERE id = ?`, [riscoId], (err, risco) => {
-    if (err || !risco) return res.send('Risco não encontrado.');
+router.get('/editar/:id', (req, res) => {
+  const id = req.params.id;
+  db.get('SELECT * FROM riscos WHERE id = ?', [id], (err, risco) => {
+    if (err || !risco) return res.send('Risco não encontrado');
     res.render('editar_risco', { risco });
   });
 });
 
-router.post('/editar/:id', requireLogin, (req, res) => {
-  const { risco, causa, consequencia, impacto, probabilidade } = req.body;
+// Atualizar risco
+router.post('/atualizar/:id', (req, res) => {
+  const id = req.params.id;
+  const { risco, causa, consequencia, impacto, probabilidade, contrato_id, fase } = req.body;
   const nri = impacto * probabilidade;
-  const data_registro = new Date().toISOString();
-  db.run(
-    `UPDATE riscos SET risco = ?, causa = ?, consequencia = ?, impacto = ?, probabilidade = ?, nri = ?, data_registro = ?, alterado_por = ? WHERE id = ?`,
-    [risco, causa, consequencia, impacto, probabilidade, nri, data_registro, req.session.usuario, req.params.id],
-    function (err) {
-      if (err) return res.send('Erro ao atualizar risco.');
-      res.redirect(`/riscos/cadastrar/${req.body.contrato_id || req.params.id}`);
-    }
-  );
+  const data = new Date().toISOString();
+  const usuario = req.session.usuario || 'desconhecido';
+
+  const sql = `
+    UPDATE riscos
+    SET risco = ?, causa = ?, consequencia = ?, impacto = ?, probabilidade = ?, nri = ?, data_registro = ?, fase = ?, alterado_por = ?
+    WHERE id = ?
+  `;
+
+  db.run(sql, [risco, causa, consequencia, impacto, probabilidade, nri, data, fase, usuario, id], function (err) {
+    if (err) return res.send('Erro ao atualizar risco');
+    res.redirect('/riscos/gerenciar/' + contrato_id);
+  });
 });
 
-// Relatório HTML
-router.get('/relatorio-html/:contratoId', requireLogin, async (req, res) => {
-  const contratoId = req.params.contratoId;
-  db.get(`SELECT * FROM contratos WHERE id = ?`, [contratoId], async (err, contrato) => {
-    if (err || !contrato) return res.send('Contrato não encontrado.');
-    Risco.listarPorContrato(contratoId, async (err, riscos) => {
-      if (err) return res.send('Erro ao buscar riscos.');
-      for (const risco of riscos) {
-        risco.acoes = await new Promise(resolve => {
-          Acao.listarPorRisco(risco.id, (err, acoes) => resolve(acoes || []));
-        });
-      }
-      res.render('relatorio', { riscos, contrato });
+// Formulário para ações
+router.get('/acoes/:riscoId', (req, res) => {
+  const riscoId = req.params.riscoId;
+  db.get('SELECT * FROM riscos WHERE id = ?', [riscoId], (err, risco) => {
+    if (err || !risco) return res.send('Risco não encontrado');
+    db.get('SELECT * FROM contratos WHERE id = ?', [risco.contrato_id], (err, contrato) => {
+      if (err || !contrato) return res.send('Contrato não encontrado');
+      db.all('SELECT * FROM acoes WHERE risco_id = ?', [riscoId], (err, acoes) => {
+        if (err) return res.send('Erro ao buscar ações');
+        res.render('acoes', { risco, contrato, acoes });
+      });
     });
   });
 });
 
-// Relatório PDF
-router.get('/relatorio-pdf/:contratoId', requireLogin, async (req, res) => {
-  const contratoId = req.params.contratoId;
-  db.get(`SELECT * FROM contratos WHERE id = ?`, [contratoId], async (err, contrato) => {
-    if (err || !contrato) return res.send('Contrato não encontrado.');
-    Risco.listarPorContrato(contratoId, async (err, riscos) => {
-      if (err) return res.send('Erro ao buscar riscos.');
-      for (const risco of riscos) {
-        risco.acoes = await new Promise(resolve => {
-          Acao.listarPorRisco(risco.id, (err, acoes) => resolve(acoes || []));
-        });
-      }
-      res.render('relatorio', { riscos, contrato }, (err, html) => {
-        if (err) return res.send('Erro ao renderizar o relatório.');
-        const options = { format: 'A4', orientation: 'portrait', border: '10mm' };
-        pdf.create(html, options).toBuffer((err, buffer) => {
-          if (err) return res.send('Erro ao gerar PDF.');
-          res.set({
-            'Content-Type': 'application/pdf',
-            'Content-Disposition': `attachment; filename="relatorio_riscos_${contratoId}.pdf"`,
-            'Content-Length': buffer.length
-          });
-          res.send(buffer);
-        });
+// Visualizar ações (somente leitura)
+router.get('/acoes/ver/:riscoId', (req, res) => {
+  const riscoId = req.params.riscoId;
+  db.get('SELECT * FROM riscos WHERE id = ?', [riscoId], (err, risco) => {
+    if (err || !risco) return res.send('Risco não encontrado');
+    db.get('SELECT * FROM contratos WHERE id = ?', [risco.contrato_id], (err, contrato) => {
+      if (err || !contrato) return res.send('Contrato não encontrado');
+      db.all('SELECT * FROM acoes WHERE risco_id = ?', [riscoId], (err, acoes) => {
+        if (err) return res.send('Erro ao buscar ações');
+        res.render('acoes_ver', { risco, contrato, acoes });
       });
+    });
+  });
+});
+
+// Salvar ação
+router.post('/acoes/salvar', (req, res) => {
+  const { risco_id, tipo, descricao, responsavel, situacao } = req.body;
+  const data = new Date().toISOString().split('T')[0];
+
+  const sql = `
+    INSERT INTO acoes (risco_id, tipo, descricao, responsavel, situacao, data_atualizacao)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `;
+
+  db.run(sql, [risco_id, tipo, descricao, responsavel, situacao, data], function (err) {
+    if (err) return res.send('Erro ao salvar ação');
+    res.redirect('/riscos/acoes/' + risco_id);
+  });
+});
+
+// Gerar relatório PDF
+router.get('/relatorio/:contratoId', (req, res) => {
+  const contratoId = req.params.contratoId;
+  db.get('SELECT * FROM contratos WHERE id = ?', [contratoId], (err, contrato) => {
+    if (err || !contrato) return res.send('Contrato não encontrado');
+    db.all('SELECT * FROM riscos WHERE contrato_id = ?', [contratoId], (err, riscos) => {
+      if (err) return res.send('Erro ao buscar riscos');
+
+      const riscosComAcoes = [];
+
+      const buscarAcoes = (index) => {
+        if (index >= riscos.length) {
+          const filePath = path.join(__dirname, '../views/relatorio_pdf.ejs');
+          ejs.renderFile(filePath, { contrato, riscos: riscosComAcoes }, (err, html) => {
+            if (err) return res.send('Erro ao gerar HTML do relatório');
+            pdf.create(html, { format: 'A4' }).toStream((err, stream) => {
+              if (err) return res.send('Erro ao gerar PDF');
+              res.setHeader('Content-Type', 'application/pdf');
+              stream.pipe(res);
+            });
+          });
+          return;
+        }
+
+        const risco = riscos[index];
+        db.all('SELECT * FROM acoes WHERE risco_id = ?', [risco.id], (err, acoes) => {
+          risco.acoes = acoes || [];
+          riscosComAcoes.push(risco);
+          buscarAcoes(index + 1);
+        });
+      };
+
+      buscarAcoes(0);
     });
   });
 });

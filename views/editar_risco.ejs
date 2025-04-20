@@ -3,33 +3,55 @@
 <head>
   <meta charset="UTF-8">
   <title>Editar Risco</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="container mt-4">
   <h2>Editar Risco</h2>
-  <form method="POST" action="/riscos/editar/<%= risco.id %>">
+
+  <form method="POST" action="/riscos/atualizar/<%= risco.id %>">
+    <input type="hidden" name="contrato_id" value="<%= risco.contrato_id %>">
+    <p><strong>Fase:</strong> <%= risco.fase %></p>
     <div class="mb-3">
-      <label>Risco</label>
-      <input type="text" name="risco" value="<%= risco.risco %>" class="form-control" required>
+      <label for="fase" class="form-label">Fase do Risco</label>
+      <select class="form-select" id="fase" name="fase" required>
+        <option value="Planejamento" <%= risco.fase === 'Planejamento' ? 'selected' : '' %>>Planejamento</option>
+        <option value="Seleção do Fornecedor" <%= risco.fase === 'Seleção do Fornecedor' ? 'selected' : '' %>>Seleção do Fornecedor</option>
+        <option value="Gestão Contratual" <%= risco.fase === 'Gestão Contratual' ? 'selected' : '' %>>Gestão Contratual</option>
+      </select>
     </div>
+
     <div class="mb-3">
-      <label>Causa</label>
-      <input type="text" name="causa" value="<%= risco.causa %>" class="form-control" required>
+      <label for="risco" class="form-label">Risco</label>
+      <input type="text" class="form-control" id="risco" name="risco" value="<%= risco.risco %>" required>
     </div>
+
     <div class="mb-3">
-      <label>Consequência</label>
-      <input type="text" name="consequencia" value="<%= risco.consequencia %>" class="form-control" required>
+      <label for="causa" class="form-label">Causa</label>
+      <input type="text" class="form-control" id="causa" name="causa" value="<%= risco.causa %>" required>
     </div>
+
     <div class="mb-3">
-      <label>Probabilidade (1 a 5)</label>
-      <input type="number" name="probabilidade" min="1" max="5" value="<%= risco.probabilidade %>" class="form-control" required>
+      <label for="consequencia" class="form-label">Consequência</label>
+      <input type="text" class="form-control" id="consequencia" name="consequencia" value="<%= risco.consequencia %>" required>
     </div>
-    <div class="mb-3">
-      <label>Impacto (1 a 5)</label>
-      <input type="number" name="impacto" min="1" max="5" value="<%= risco.impacto %>" class="form-control" required>
+
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <label for="impacto" class="form-label">Impacto</label>
+        <input type="number" class="form-control" id="impacto" name="impacto" value="<%= risco.impacto %>" required>
+      </div>
+      <div class="col-md-6 mb-3">
+        <label for="probabilidade" class="form-label">Probabilidade</label>
+        <input type="number" class="form-control" id="probabilidade" name="probabilidade" value="<%= risco.probabilidade %>" required>
+      </div>
     </div>
-    <button class="btn btn-primary">Salvar Alterações</button>
-    <a href="/riscos/gerenciar/<%= risco.contrato_id %>" class="btn btn-secondary">Cancelar</a>
+
+    <button type="submit" class="btn btn-primary">
+      <i class="bi bi-save"></i> Salvar Alterações
+    </button>
+    <a href="/riscos/gerenciar/<%= risco.contrato_id %>" class="btn btn-secondary ms-2">
+      Cancelar
+    </a>
   </form>
 </body>
 </html>

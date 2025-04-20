@@ -2,73 +2,77 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
-  <title>Cadastro de Riscos</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <title>Gerenciar Riscos</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 </head>
 <body class="container mt-4">
-  <h2>Cadastro de Risco</h2>
-  <h5><strong>Contrato:</strong> <%= contrato.numero_contrato %> — <%= contrato.objeto %></h5>
+  <h2>Riscos do Contrato</h2>
+  <p><strong>PA:</strong> <%= contrato.numero_pa %> — <strong>Objeto:</strong> <%= contrato.objeto %></p>
 
-  <form method="POST" action="/riscos/salvar">
-    <input type="hidden" name="contrato_id" value="<%= contratoId %>">
-    <div class="mb-3">
-      <label>Risco</label>
-      <input type="text" name="risco" class="form-control" required>
-    </div>
-    <div class="mb-3">
-      <label>Causa</label>
-      <input type="text" name="causa" class="form-control" required>
-    </div>
-    <div class="mb-3">
-      <label>Consequência</label>
-      <input type="text" name="consequencia" class="form-control" required>
-    </div>
-    <div class="row">
-      <div class="col">
-        <label>Probabilidade</label>
-        <input type="number" name="probabilidade" min="1" max="5" class="form-control" required>
-      </div>
-      <div class="col">
-        <label>Impacto</label>
-        <input type="number" name="impacto" min="1" max="5" class="form-control" required>
-      </div>
-    </div>
-    <button class="btn btn-primary mt-3">Salvar Risco</button>
-  </form>
+  <div class="mb-3 d-flex justify-content-between">
+    <a href="/riscos/cadastrar/<%= contrato.id %>" class="btn btn-success">
+      <i class="bi bi-plus-circle"></i> Adicionar Risco
+    </a>
 
-  <hr>
-  <h4>Riscos Cadastrados</h4>
-  <table class="table table-bordered">
-    <thead>
-      <tr>
-        <th>Risco</th>
-        <th>Causa</th>
-        <th>Consequência</th>
-        <th>Impacto</th>
-        <th>Probabilidade</th>
-        <th>NRI</th>
-        <th>Data</th>
-        <th>Alterado por</th>
-        <th>Ações</th>
-      </tr>
-    </thead>
-    <tbody>
-      <% riscos.forEach(r => { %>
+    <a href="/riscos/relatorio/<%= contrato.id %>" class="btn btn-outline-dark" target="_blank">
+      <i class="bi bi-file-earmark-pdf"></i> Gerar Relatório PDF
+    </a>
+  </div>
+
+  <% if (riscos.length === 0) { %>
+    <div class="alert alert-info">Nenhum risco cadastrado para este contrato.</div>
+  <% } else { %>
+    <table class="table table-bordered">
+      <thead class="table-light">
         <tr>
-          <td><%= r.risco %></td>
-          <td><%= r.causa %></td>
-          <td><%= r.consequencia %></td>
-          <td><%= r.impacto %></td>
-          <td><%= r.probabilidade %></td>
-          <td><%= r.nri %></td>
-          <td><%= new Date(r.data_registro).toLocaleString('pt-BR') %></td>
-          <td><%= r.alterado_por || '-' %></td>
-          <td>
-            <a href="/riscos/editar/<%= r.id %>" class="btn btn-sm btn-outline-secondary">✏️ Editar</a>
-          </td>
+          <th>Risco</th>
+          <th>Causa</th>
+          <th>Consequência</th>
+          <th>Impacto</th>
+          <th>Probabilidade</th>
+          <th>NRI</th>
+          <th>Cadastrado/Alterado por</th>
+          <th>Ações</th>
         </tr>
-      <% }) %>
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        <% riscos.forEach(r => { %>
+          <tr>
+            <td><%= r.risco %></td>
+            <td><%= r.causa %></td>
+            <td><%= r.consequencia %></td>
+            <td><%= r.impacto %></td>
+            <td><%= r.probabilidade %></td>
+            <td><%= r.nri %></td>
+            <td>
+              <%= r.alterado_por || '-' %><br>
+              <small class="text-muted"><%= new Date(r.data_registro).toLocaleString('pt-BR') %></small>
+            </td>
+            <td class="text-center">
+              <a href="/riscos/editar/<%= r.id %>" class="btn btn-warning btn-sm" title="Editar Risco">
+                <i class="bi bi-pencil-square"></i>
+              </a>
+              <% if (r.nri >= 8) { %>
+                <a href="/riscos/acoes/ver/<%= r.id %>" class="btn btn-outline-primary btn-sm" title="Visualizar Ações">
+                  <i class="bi bi-card-checklist"></i>
+                </a>
+              <% } else { %>
+                <button class="btn btn-outline-secondary btn-sm" disabled title="Sem ações obrigatórias">
+                  <i class="bi bi-card-checklist"></i>
+                </button>
+              <% } %>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  <% } %>
+
+  <div class="mt-4">
+    <a href="/contratos" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left"></i> Salvar e Voltar para Contratos
+    </a>
+  </div>
 </body>
 </html>

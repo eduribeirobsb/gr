@@ -46,3 +46,6 @@ http://localhost:3000
 
 ## 📂 Biblioteca Externa
 https://github.com/marcbachmann/node-html-pdf
+
+## 🧪 Teste
+Os testes utilizaram o Jest e Supertest
